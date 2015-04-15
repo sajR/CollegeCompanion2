@@ -30,6 +30,7 @@ public class DatabaseHandler extends SQLiteOpenHelper{
             KEY_Address = "address",
             KEY_StudentImage = "studentImage",
 
+
     TABLE_BOOKS="Books",
             KEY_ISBN = "ISBN",
             KEY_BookName = "BookName",
@@ -48,7 +49,9 @@ public class DatabaseHandler extends SQLiteOpenHelper{
     TABLE_REGISTRATIONS="Registrations",
             KEY_RegistrationID="RegistrationID",
             KEY_studentNumberReg="studentNumber",
-            KEY_LessonIDReg="LessonID";
+            KEY_LessonIDReg="LessonID",
+            KEY_RegistrationQR="QR";
+
 
 
 
@@ -63,14 +66,11 @@ public class DatabaseHandler extends SQLiteOpenHelper{
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE " + TABLE_STUDENTS + "(" + KEY_StudentNumber + " INTEGER PRIMARY KEY,"+ KEY_FirstName + " TEXT," + KEY_LastName + " TEXT," + KEY_DOB+ " TEXT,"+ KEY_Email + " TEXT," + KEY_Address + " TEXT," + KEY_phone+ " TEXT,"+KEY_CoverImage + " TEXT)");
-        db.execSQL("CREATE TABLE " + TABLE_BOOKS + "(" + KEY_ISBN + " TEXT PRIMARY KEY,"+KEY_BookName+" TEXT," + KEY_Author + " TEXT," + KEY_Status + " TEXT," + KEY_BookQR+" TEXT"+KEY_CoverImage + " TEXT," + KEY_StudentNumberBooks + " INTEGER NOT NULL,FOREIGN KEY ("+ KEY_StudentNumberBooks+") REFERENCES "+ TABLE_STUDENTS+"("+KEY_StudentNumber+"));");
+        db.execSQL("CREATE TABLE " + TABLE_BOOKS + "(" + KEY_ISBN + " TEXT PRIMARY KEY,"+KEY_BookName+" TEXT," + KEY_Author + " TEXT," + KEY_Status + " TEXT," + KEY_BookQR+" TEXT,"+KEY_CoverImage + " TEXT," + KEY_StudentNumberBooks + " INTEGER)");
         db.execSQL("CREATE TABLE " + TABLE_LESSONS + "(" + KEY_LessonID + " INTEGER PRIMARY KEY AUTOINCREMENT,"+KEY_LessonName+" TEXT," + KEY_LecturerName + " TEXT," + KEY_RoomNumber + " INTEGER)");
-        db.execSQL("CREATE TABLE " + TABLE_REGISTRATIONS + "(" + KEY_RegistrationID + " INTEGER PRIMARY KEY AUTOINCREMENT," +KEY_LessonIDReg +"INTEGER NOT NULL ,FOREIGN KEY (" +KEY_LessonIDReg+")REFERENCES "+TABLE_LESSONS+"("+KEY_LessonID+"),"+ KEY_studentNumberReg+ "INTEGER NOT NULL, FOREIGN KEY ("+ KEY_studentNumberReg+")REFERENCES "+ TABLE_STUDENTS+"("+KEY_StudentNumber+"))");
+        db.execSQL("CREATE TABLE " + TABLE_REGISTRATIONS + "(" + KEY_RegistrationID + " INTEGER PRIMARY KEY," + KEY_LessonIDReg + "INTEGER," + KEY_studentNumberReg + " INTEGER," + KEY_RegistrationQR + " INTEGER)");
 
 
-        db.execSQL("CREATE TRIGGER fk_StudentBook_studentNumber " + " BEFORE INSERT "+ " ON "+TABLE_BOOKS+ " FOR EACH ROW BEGIN"+" SELECT CASE WHEN ((SELECT "+KEY_StudentNumber+"=new."+KEY_StudentNumber+" ) IS NULL)"+ " THEN RAISE (ABORT,'Foreign Key Violation') END;");
-        db.execSQL("CREATE TRIGGER fk_StudentReg_studentNumber " + " BEFORE INSERT "+ " ON "+TABLE_REGISTRATIONS+ " FOR EACH ROW BEGIN"+" SELECT CASE WHEN ((SELECT "+KEY_StudentNumber+"=new."+KEY_StudentNumber+" ) IS NULL)"+ " THEN RAISE (ABORT,'Foreign Key Violation') END;");
-        db.execSQL("CREATE TRIGGER fk_LessonReg_LessonID " + " BEFORE INSERT " + " ON " + TABLE_REGISTRATIONS + " FOR EACH ROW BEGIN" + " SELECT CASE WHEN ((SELECT " + KEY_LessonID + "=new." + KEY_LessonID + " ) IS NULL)" + " THEN RAISE (ABORT,'Foreign Key Violation') END;");
 
     }
 
@@ -136,8 +136,7 @@ public class DatabaseHandler extends SQLiteOpenHelper{
         values.put(KEY_RegistrationID, registration.getRegistrationID());
         values.put(KEY_LessonIDReg, registration.getLessonID());
         values.put(KEY_studentNumberReg, registration.getRegistrationID());
-
-
+        values.put(KEY_RegistrationQR,registration.getRegistrationQR());
         db.insert(TABLE_REGISTRATIONS, null, values);
         db.close();
     }
@@ -171,6 +170,18 @@ public class DatabaseHandler extends SQLiteOpenHelper{
 
         return count;
     }
+    public int getBooksCount() {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_BOOKS, null);
+        int count = cursor.getCount();
+        db.close();
+        cursor.close();
+
+        return count;
+    }
+
+
+
 
 
 
@@ -189,6 +200,49 @@ public class DatabaseHandler extends SQLiteOpenHelper{
         cursor.close();
         db.close();
         return ListStudent;
+    }
+
+    public void updateBook(String QR, String StudentNumber) {
+        SQLiteDatabase db = getWritableDatabase();
+        String _qr=QR;
+        String _studentnumber=StudentNumber;
+
+        db.execSQL("UPDATE " + TABLE_BOOKS + " SET " + KEY_Status + "='Taken' , " + KEY_StudentNumberBooks + " = '" + _studentnumber + "' WHERE " + KEY_BookQR + "='" + _qr + "';");
+        //OR
+        db.execSQL("UPDATE Books SET status='Taken',studentNumber='" + Integer.parseInt(_studentnumber) + " WHERE QR='" + _qr + "';");
+
+    }
+    public void updateRegistration(String QR,String StudentNumber)
+    {
+        SQLiteDatabase db=getWritableDatabase();
+        String _qr=QR;
+        String _studentNumber=StudentNumber;
+
+        db.execSQL("UPDATE " +TABLE_REGISTRATIONS+ " SET "+KEY_studentNumberReg+ "="+Integer.parseInt(_studentNumber)+" WHERE " + KEY_RegistrationQR + "='" + _qr + "';");
+        db.execSQL("UPDATE Registrations SET studentNumber=" + Integer.parseInt(_studentNumber) + " WHERE QR='" + _qr + "';");
+
+
+
+    }
+    public void updateBooks(String QR,String StudentNumber)
+    {
+        SQLiteDatabase db = getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+
+        values.put(KEY_Status,"Taken");
+        values.put(KEY_StudentNumberBooks,StudentNumber);
+        db.update(TABLE_BOOKS, values, KEY_BookQR + "=" + QR, null);
+        db.close();
+
+    }
+    public void uodateRegistratins(String QR,String StudentNumber)
+    {
+        SQLiteDatabase db=getWritableDatabase();
+        ContentValues values=new ContentValues();
+        values.put(KEY_studentNumberReg,StudentNumber);
+        db.update(TABLE_REGISTRATIONS,values,KEY_RegistrationQR+"="+QR,null);
+
     }
 
 }

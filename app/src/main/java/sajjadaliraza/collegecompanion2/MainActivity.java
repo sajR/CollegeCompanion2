@@ -30,6 +30,9 @@ public class MainActivity extends Activity {
     EditText firstNameTxt,LastNametxt, phoneTxt, emailTxt, addressTxt,StudentNumberTxt,DOBtxt;
     ImageView studentImageView;
     List<Students> ListStudent = new ArrayList<Students>();
+    List<Books> ListBooks = new ArrayList<Books>();
+    List<Lessons> ListLessons = new ArrayList<Lessons>();
+    List<Registrations> ListRegistrations = new ArrayList<Registrations>();
     ListView StudentListView;
     Uri imageUri = Uri.parse("android.resource://org.intracode.contactmanager/drawable/no_user_logo.png");
     DatabaseHandler dbHandler;
@@ -80,6 +83,15 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 Students student = new Students(dbHandler.getStudentsCount(), String.valueOf(firstNameTxt.getText()), String.valueOf(LastNametxt.getText()), String.valueOf(DOBtxt.getText()),String.valueOf(emailTxt.getText()),String.valueOf(phoneTxt.getText()), String.valueOf(addressTxt.getText()), imageUri);
+            //    Books book=new Books(dbHandler.getBooksCount(),String.valueOf(ISBNtxt.getText()),String.valueOf(BookNametxt.getText()),String.valueOf(Authortxt.getText()),String.valueOf(Statustxt.getTEXT()),bookImage,)
+              Books book=new Books("AB121","ComputerScience","Stephen Smith","Available",null,"b112",0);
+                Books book1=new Books("AB121","ComputerScience","sajjR","Taken",null,"b112",Integer.parseInt("21999"));
+                Books book2=new Books("AB121","Computers","Shannon Smith","Taken",null,"b112",Integer.parseInt("290776"));
+                Registrations registration2=new Registrations(1,3,0,"QR123");
+                Registrations registration3=new Registrations(4,5,0,"QR123");
+                dbHandler.createRegistration(registration2);
+                dbHandler.createRegistration(registration3);
+
 
                 if (!studentExists(student)) {
                     dbHandler.createStudent(student);
@@ -88,7 +100,15 @@ public class MainActivity extends Activity {
                     Toast.makeText(getApplicationContext(), String.valueOf(firstNameTxt.getText()) + " has been added to your Contacts!", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                if (!bookExits(book)) {
+                    dbHandler.createBook(book);
+                    ListBooks.add(book);
+                  bookAdapater.notifyDataSetChanged();
+                    studentAdapter.notifyDataSetChanged();
+                }
+
                 Toast.makeText(getApplicationContext(), String.valueOf(firstNameTxt.getText()) + " already exists. Please use a different name.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), String.valueOf(bookName.getText()) + " already exists. Please use a different name.", Toast.LENGTH_SHORT).show();
             }
         });
         firstNameTxt.addTextChangedListener(new TextWatcher() {
@@ -136,11 +156,18 @@ public class MainActivity extends Activity {
     private void populateList() {
       studentAdapter= new studentListAdapter();
         StudentListView.setAdapter(studentAdapter);
+        bookAdapter=new BookListAdapter();
+        BookListView=setAdapter(bookAdapter);
     }
     private class studentListAdapter extends ArrayAdapter<Students> {
         public studentListAdapter() {
             super (MainActivity.this, R.layout.listview_item, ListStudent);
         }
+        private class BookListAdapter extends ArrayAdapter<Books> {
+            public bookListAdapter() {
+                super(MainActivity.this, R.layout.listview_item, ListStudent);
+            }yeah
+
 
         @Override
         public View getView(int position, View view, ViewGroup parent) {
